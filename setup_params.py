@@ -2,7 +2,7 @@ import os
 import logging
 import torch
 #------------- Global Setup ----------------
-identifier = 'multiclass_vgg'
+identifier = 'two_stage_transfer'
 model_log_name = identifier + '.log'
 MODEL_NAME = 'vgg16_bn'
 
@@ -38,7 +38,7 @@ IMBALANCED_SAMPLING = True
 
 if SUBSET_SAMPLING:
     SUBSET_SAMPLING_SIZE = 45000
-    REDUCED_EPOCHS = 50
+    REDUCED_EPOCHS = 25
 
 if IMBALANCED_SAMPLING:
     POSITIVE_CASE_RATIO = 0.15
