@@ -51,8 +51,7 @@ MANIUPULATE_TEST = True
 POSITIVE_CASES_NUM = 50 if MANIUPULATE_TEST else None
 NEGATIVE_CASES_NUM = 200 if MANIUPULATE_TEST else None #set to 50 if multilabel
 
-# # -------------------------- Model specification
-# --------------------------------------
+# -------------------------- Model specification ----------------------------
 
 '''
 MODEL_NAME specifies the model choice for training. User can choose from
@@ -73,7 +72,7 @@ OPTIMIZER = 'Adam'
 NUMBER_OF_EPOCHS = 50
 ALTERNATIVE_INITIALIZATION = False
 
-# ------------------- which scenario ---------------
+# -------------------------- Binary or Multi ----------------------------
 '''
 GROUND_TRUTH_DIR needs an absolute path to the ground truth file
 '''
@@ -114,8 +113,7 @@ assert not os.path.exists(file_log),'TRAINING_SESSION_IDENTIFIER alreay exists.'
 add_to_one = TRAIN_RATIO + TEST_RATIO + VALIDATION_RATIO
 assert  add_to_one >= 0.99, 'the ratios are supposed to add up to 1'
 
-# -------------------------- Initialize the logger
-# --------------------------------------
+# -------------------------- Initialize the logger --------------------------------------
 '''
 A global session of logging will be started and a log file
 will be created in the pre-determined location.
