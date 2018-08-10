@@ -24,8 +24,7 @@ except FileExistsError:
 finally:
     print(f'logs and models will saved in training_log folder at {HOME}')
 
-# -------------------------- Data preprocessing
-# --------------------------------------
+# -------------------------- Data preprocessing --------------------------------------
 
 '''
 SUBSET_SAMPLING allows users to sample a small portion
