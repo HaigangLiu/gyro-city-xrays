@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
 
-# -------------------------- Enviroment variables
-# --------------------------------------
+# -------------------------- Enviroment variables --------------------------------------
 
 '''
 DATA_DIR is the directory of all image files
