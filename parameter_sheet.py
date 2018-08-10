@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
 
-# -------------- Enviroment variables -------------
+# -------------------------- Enviroment variables
+# --------------------------------------
+
 '''
 DATA_DIR is the directory of all image files
 TRAINING_SESSION_IDENTIFIER must be unique and should be informative
@@ -11,8 +13,8 @@ LOG_FOLDER_NAME is the name of the folder to be created to store log files
 DATA_DIR = "/Users/haigangliu/ImageData/ChestXrayData/"
 TRAINING_SESSION_IDENTIFIER = 'multiclass_vgg11_new'
 LOG_FOLDER_NAME = 'training_log'
-
 HOME = str(Path.home())
+
 try:
     os.mkdir(os.path.join(HOME, LOG_FOLDER_NAME))
     print(f'create a  training_log folder at {HOME}')
@@ -22,7 +24,9 @@ except FileExistsError:
 finally:
     print(f'logs and models will saved in training_log folder at {HOME}')
 
-# ------------------- data step ---------------
+# -------------------------- Data preprocessing
+# --------------------------------------
+
 '''
 SUBSET_SAMPLING allows users to sample a small portion
 of the training set every time to speed up computation
@@ -47,7 +51,9 @@ MANIUPULATE_TEST = True
 POSITIVE_CASES_NUM = 50 if MANIUPULATE_TEST else None
 NEGATIVE_CASES_NUM = 200 if MANIUPULATE_TEST else None #set to 50 if multilabel
 
-# ------------------- Model step ---------------
+# # -------------------------- Model specification
+# --------------------------------------
+
 '''
 MODEL_NAME specifies the model choice for training. User can choose from
     resnet18, resnet34, resnet50, resnet152
@@ -98,7 +104,7 @@ else:
     GROUND_TRUTH_DIR = os.path.join(os.getcwd(), 'multi_label/image_list.txt')
     USE_DEFAULT_SPLIT = True
 
-# ------------------- Sanity Check  -------------------
+# -------------------------- Sanity Check  --------------------------------------
 '''
 Make sure do not overwrite previous files
 and train, test and val ratio add up to 1.
@@ -108,7 +114,8 @@ assert not os.path.exists(file_log),'TRAINING_SESSION_IDENTIFIER alreay exists.'
 add_to_one = TRAIN_RATIO + TEST_RATIO + VALIDATION_RATIO
 assert  add_to_one >= 0.99, 'the ratios are supposed to add up to 1'
 
-# ------------------- Initialize the logger ---------------
+# -------------------------- Initialize the logger
+# --------------------------------------
 '''
 A global session of logging will be started and a log file
 will be created in the pre-determined location.
