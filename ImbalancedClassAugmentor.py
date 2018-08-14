@@ -1,15 +1,14 @@
 import os
-import pandas as pd
 from shutil import copyfile, rmtree
 import Augmentor #data augmentation pipeline
-from tqdm import tqdm #progress bar
-import numpy as np
-from SamplingSchemes import DataSplitter
 import random
-import string #Generate a random name for temp folder
+import secrets #Generate a random name for temp folder
+from parameter_sheet import LOG_DIR, DATA_DIR
+from data_utilities import DataConstructor
+import torch
 
-class ImbalancedClassAugmentor:
 
+class DataAugmentor:
     '''
     Implement data augmentation for the minority group to alleviate the problem of imbalaced sampling.
 
@@ -22,28 +21,35 @@ class ImbalancedClassAugmentor:
 
         Returns:
         None.
-
     Note: A folder with new images will be created.
     '''
 
-    def __init__(self, HOME_DIR, DATA_DIR, output_folder_name,training_df, sample_size = 10000):
+    def __init__(self, ground_truth_file, which_class, sample_size = 1000):
 
-        self.HOME_DIR = HOME_DIR
-        self.DATA_DIR = DATA_DIR
+        self.which_class = which_class
+        self.file_list_to_augment = []
+        for line in open(ground_truth_file, 'r'):
+                items = line.split()
+                image_name = items[0]
+                label = items[1:]
+                label = [int(i) for i in label]
 
-        self.temp_dir = HOME_DIR +''.join(random.choices(string.ascii_uppercase + string.digits, k=20) )+ '/'
-        self.output_dir = self.HOME_DIR + output_folder_name
+                if label[self.which_class] == 1:
+                    self.file_list_to_augment.append(image_name)
 
-        self.image_names_to_retain = training_df[training_df.labels == 1]['Image Index']
         self.sample_size = sample_size
 
-        assert os.path.exists(self.output_dir) == False, "target folder already exists, remove it or specify a different target name"
-        assert os.path.exists(self.DATA_DIR) == True, "Cannot find the x-ray images. Please make sure the directory is correct"
-        assert type(sample_size) == int and sample_size > 0, "the sample size has to be a positive integer"
-
+        self._set_up()
         self._file_copier()
         self._augmentor_initializer()
         self._tear_down()
+
+    def _set_up(self):
+        # copy all positive cases into a one folder.
+        # will be delelted later
+        temp = secrets.token_hex(4)
+        self.temp_dir = os.path.join(LOG_DIR, temp)
+        self.output_dir = os.path.join(LOG_DIR, 'augmentation_folder')
 
     def _file_copier(self):
         try:
@@ -52,13 +58,14 @@ class ImbalancedClassAugmentor:
             assert len(os.listdir(self.temp_dir)) == 0 , 'This dir exists and not empty.'
         finally:
             print('Start copying positive cases to a new folder... This might take while...')
-            for image in tqdm(os.listdir(self.DATA_DIR)):
-                if image in list(self.image_names_to_retain):
+            for idx, image in enumerate(os.listdir(DATA_DIR)):
+                if image in self.file_list_to_augment:
                     new_image = 'copy_' + image
-                    copyfile(self.DATA_DIR + image, self.temp_dir + new_image)
+                    from_ = os.path.join(DATA_DIR, image)
+                    to_ = os.path.join( self.temp_dir, new_image)
+                    copyfile(from_, to_)
 
     def _augmentor_initializer(self):
-
         augmentor_ppl = Augmentor.Pipeline(source_directory =self.temp_dir, output_directory = self.output_dir)
         augmentor_ppl.rotate( probability=1,
                               max_left_rotation=5,
@@ -72,3 +79,15 @@ class ImbalancedClassAugmentor:
         print('\n cleaning up ... ')
         rmtree(self.temp_dir)
         print('\n finished cleaning up ... ')
+
+    def concat_original_dataset(self, original_dataset):
+        additional_dataset = DataConstructor(self.output_dir,
+           ground_truth=self.which_class, transform=None)
+        combined_dataset = torch.utils.data.ConcatDataset([additional_dataset, original_dataset])
+        return combined_dataset
+
+
+if __name__ == '__main__':
+    s = DataAugmentor('/Users/haigangliu/training_log/test.txt', which_class =
+    0, sample_size=5000)
+
