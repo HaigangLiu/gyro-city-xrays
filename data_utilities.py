@@ -93,6 +93,10 @@ if __name__ == '__main__':
     print(len(test_loader_mode2))
     print(test_loader_mode2[1])
 
+    test_loader_mode3 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', 'split/test.txt')
+    print(len(test_loader_mode2))
+    print(test_loader_mode2[1])
+
 
 
 # 1. to do list
