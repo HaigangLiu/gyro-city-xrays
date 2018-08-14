@@ -7,81 +7,37 @@ import torch
 
 class DataConstructor(Dataset):
     '''
-     Args:
-        param1 (str): Directory of the images
-        param2 (pandas dataframe): Dataframe that contains the information of images.
-        param3 (optional): pytorch image transformation operations
-
-    Returns:
-        Pytorch Dataset.
-    '''
-    def __init__(self, data_dir_, image_info_df, transform = None):
-        try:
-            self.data_dir_ = data_dir_
-            self.image_names = list(image_info_df['Image Index'])
-            self.labels = list(image_info_df.labels)
-            self.transform = transform
-
-        except KeyError:
-            print('Expecting a dataframe with a column called Image Index (image names) and a column called labels')
-
-    def __getitem__(self, index):
-
-        image_name = os.path.join(self.data_dir_ + self.image_names[index])
-        image = Image.open(image_name).convert('RGB')
-        label = self.labels[index]
-
-        if self.transform is not None:
-            image = self.transform(image)
-
-        return image, label
-
-    def __len__(self):
-        return len(self.image_names)
-
-class CustomizedDataConstructor(Dataset):
-    """
-    This class is only supposed to be used in data augmentation.
-    Hence, all labels from this dataset is 1, the positive and imbalanced class.
-    """
-    def __init__(self, data_dir_, transform = None, size = None):
-        self.data_dir_ = data_dir_
-
-        self.image_names = [i for i in os.listdir(self.data_dir_) if i.endswith('png')]
-
-        if size is not None:
-            self.image_names = list(np.random.choice(self.image_names, size, replace = False))
-
-        self.labels = np.ones(len(self.image_names), dtype = int)
-        self.transform = transform
-
-    def __getitem__(self, index):
-
-        image_name = os.path.join(self.data_dir_, self.image_names[index])
-        image = Image.open(image_name).convert('RGB')
-        label = self.labels[index]
-
-        if self.transform is not None:
-            image = self.transform(image)
-
-        return image, label
-
-    def __len__(self):
-        return len(self.image_names)
-
-class ChestXrayDataSetMultiLabel(Dataset):
-    def __init__(self, data_dir, image_list_file, transform=None):
+    Args:
+        data_dir (str): Directory of the images
+        ground_truth_file (str): Dir of ground truth, should be a txt file
+        transform (optional): pytorch image transformation operations; usually
+        specified later
+        '''
+    def __init__(self, image_folder, ground_truth_file = None, transform=None):
         image_names = []
         labels = []
-        with open(image_list_file, "r") as f:
-            for line in f:
-                items = line.split()
-                image_name= items[0]
-                label = items[1:]
-                label = [int(i) for i in label]
-                image_name = os.path.join(data_dir, image_name)
-                image_names.append(image_name)
-                labels.append(label)
+
+        if ground_truth_file is None:
+            print('Ground_truth_file is not specified.')
+            print('All images in this folder are assumed to belong the positive group')
+
+            image_names = []
+            for image_name in os.listdir(image_folder):
+                if image_name.endswith(('png', 'jpg', 'jpeg')):
+                    image_names.append(os.path.join(image_folder, image_name))
+
+            labels = [1]*len(image_names)
+
+        else:
+            with open(ground_truth_file, "r") as f:
+                for line in f:
+                    items = line.split()
+                    image_name= items[0]
+                    label = items[1:]
+                    label = [int(i) for i in label]
+                    image_name = os.path.join(image_folder, image_name)
+                    image_names.append(image_name)
+                    labels.append(label)
 
         self.image_names = image_names
         self.labels = labels
@@ -98,7 +54,6 @@ class ChestXrayDataSetMultiLabel(Dataset):
 
     def __len__(self):
         return len(self.image_names)
-
 
 
 class SpecializedContructorForCAM(Dataset):
@@ -127,3 +82,84 @@ class SpecializedContructorForCAM(Dataset):
 
     def __len__(self):
         return len(self.image_names)
+
+if __name__ == '__main__':
+
+    test_loader_mode1 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/')
+    print(len(test_loader_mode1))
+    print(test_loader_mode1[1])
+
+    test_loader_mode2 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', 'binary_label/test.txt')
+    print(len(test_loader_mode2))
+    print(test_loader_mode2[1])
+
+
+
+# 1. to do list
+# unify the data constructor into a same format
+# text file, with name and label
+# 2. unifiy dataloaders
+# class DataConstructor(Dataset):
+#     '''
+#      Args:
+#         param1 (str): Directory of the images
+#         param2 (pandas dataframe): Dataframe that contains the information of images.
+#         param3 (optional): pytorch image transformation operations
+
+#     Returns:
+#         Pytorch Dataset.
+#     '''
+#     def __init__(self, data_dir_, image_info_df, transform = None):
+#         try:
+#             self.data_dir_ = data_dir_
+#             self.image_names = list(image_info_df['Image Index'])
+#             self.labels = list(image_info_df.labels)
+#             self.transform = transform
+
+#         except KeyError:
+#             print('Expecting a dataframe with a column called Image Index (image names) and a column called labels')
+
+#     def __getitem__(self, index):
+
+#         image_name = os.path.join(self.data_dir_ + self.image_names[index])
+#         image = Image.open(image_name).convert('RGB')
+#         label = self.labels[index]
+
+#         if self.transform is not None:
+#             image = self.transform(image)
+
+#         return image, label
+
+#     def __len__(self):
+#         return len(self.image_names)
+
+# class SpecializedContructorForAugmentation(Dataset):
+#     """
+#     This class is only supposed to be used in data augmentation.
+#     Hence, all labels from this dataset is 1, the positive and imbalanced class.
+#     """
+#     def __init__(self, data_dir_, transform = None, size = None):
+#         self.data_dir_ = data_dir_
+
+#         self.image_names = [i for i in os.listdir(self.data_dir_) if i.endswith('png')]
+
+#         if size is not None:
+#             self.image_names = list(np.random.choice(self.image_names, size, replace = False))
+
+#         self.labels = np.ones(len(self.image_names), dtype = int)
+#         self.transform = transform
+
+#     def __getitem__(self, index):
+
+#         image_name = os.path.join(self.data_dir_, self.image_names[index])
+#         image = Image.open(image_name).convert('RGB')
+#         label = self.labels[index]
+
+#         if self.transform is not None:
+#             image = self.transform(image)
+
+#         return image, label
+
+#     def __len__(self):
+#         return len(self.image_names)
+
