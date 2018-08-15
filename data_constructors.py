@@ -12,10 +12,15 @@ NORMALIZE = transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])
 class DataConstructor(Dataset):
     '''
     Args:
-        data_dir (str): Directory of the images
+        image_folder (str): Directory of the images
         ground_truth (str): Dir of ground truth, should be a txt file
-        transform (optional): pytorch image transformation operations; usually
-        specified later
+            special usage:
+                1. set ground_truth = -1 for data augmentation in binary
+                2. set ground_truth = 0-14  for data augmentation in multiclass
+
+        transform (optional): pytorch image transformation operations;
+            usually specified later; but we have a default setting to
+            cut some slack.
         '''
     def __init__(self, image_folder, ground_truth, transform=None):
         image_names = []
@@ -29,7 +34,16 @@ class DataConstructor(Dataset):
                 if image_name.endswith(('png', 'jpg', 'jpeg')):
                     image_names.append(os.path.join(image_folder, image_name))
 
-            labels = [[ground_truth]]*len(image_names)
+            if ground_truth == -1:
+                labels = [[1]]*len(image_names) #binary; boost positive cases
+
+            elif ground_truth <=14 and ground_truth > 0: #multiclass
+                empty_string = [0]*14
+                empty_string[ground_truth] = 1
+                labels = [empty_string]*len(image_names)
+
+            else:
+                raise ValueError('ground_truth type not understood')
 
         else:
             with open(ground_truth, "r") as f:
@@ -95,7 +109,6 @@ class SpecializedContructorForCAM(Dataset):
         return len(self.image_names)
 
 if __name__ == '__main__':
-
     test_loader_mode1 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', ground_truth =3)
     print(len(test_loader_mode1))
     print(test_loader_mode1[1])
