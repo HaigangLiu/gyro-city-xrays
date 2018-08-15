@@ -2,6 +2,7 @@ import numpy as np
 from torch.utils.data.sampler import SequentialSampler, SubsetRandomSampler, WeightedRandomSampler
 import logging
 import torch
+
 class Sampler:
     '''
     generate sampler based on give sampler types:
@@ -21,10 +22,8 @@ class Sampler:
 
         __, sample_label = dataset[0]
         self.binary = len(sample_label) == 1
-
         self.dataset = dataset
         self.sampler_type = sampler_type
-        self.prob_dict = prob_dict
         self.sample_size = sample_size
 
         try: #one dataset
@@ -33,14 +32,13 @@ class Sampler:
             self.labels_ = [d.labels for d in self.dataset.datasets]
 
         if self.prob_dict is None:
-
             positives = sum(torch.tensor(self.labels_).squeeze_())
             negatives = len(self.labels_) - positives
             w_plus = negatives.float()/len(self.labels_)
             w_minus = positives.float()/len(self.labels_)
-
             self.prob_dict = {1:w_plus, 0: w_minus}
-
+        else:
+            self.prob_dict = prob_dict
 
     def generate_sampler(self):
         #sanity check
