@@ -42,7 +42,7 @@ class DataAugmentor:
         self._set_up()
         self._file_copier()
         self._augmentor_initializer()
-        self._tear_down()
+
 
     def _set_up(self):
         # copy all positive cases into a one folder.
@@ -84,10 +84,10 @@ class DataAugmentor:
         additional_dataset = DataConstructor(self.output_dir,
            ground_truth=self.which_class, transform=None)
         combined_dataset = torch.utils.data.ConcatDataset([additional_dataset, original_dataset])
+        self._tear_down()
         return combined_dataset
 
 
 if __name__ == '__main__':
-    s = DataAugmentor('/Users/haigangliu/training_log/test.txt', which_class =
-    0, sample_size=5000)
+    sample_usage = DataAugmentor('/Users/haigangliu/training_log/test.txt', which_class=0, sample_size=5000)
 
