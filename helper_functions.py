@@ -1,95 +1,54 @@
+import os
+import logging
 import pandas as pd
 import numpy as np
 import torch
-from torch.utils.data import sampler, Dataset
-from PIL import Image
-import os
-import logging
+import torch.nn as nn
 from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def sampler_imbalanced(torch_dataset, ratio, sample_size = None, verbose = False):
+def customize_cross_entropy_function(dataset, weights, verbose = False):
     """
-    Creates an imbalanced sampler which samples the minority class more frequently. Frequency is determined by specifying ratio in Args
-
-    Args:
-        torch_dataset (torch.dataset object): A torch dataset
-        ratio (float): The target ratio for the minority group after imbalanced sampling.
-
-    Returns: A torch sampler which can be used in creating dataloaders.
-
-    Note:
-    Currently only support binary classification. We assume the 1s are the minority group. Change the source code if your dataset is different.
-    """
-    weights = []
-    try:
-        labels = torch_dataset.labels
-    except AttributeError:
-        logging.warning('This dataset is made up by two smaller dataset.')
-        labels = np.hstack([torch_dataset.datasets[0].labels, torch_dataset.datasets[1].labels])
-    try:
-        positive_cases = sum(labels)
-        negative_cases = len(labels) - positive_cases
-    except KeyError:
-        logging.error("only supporting binary: 0, 1")
-        return None
-
-    class_1 = 1 #base class
-    class_2 = (negative_cases/positive_cases)*(ratio/0.5) #minority class
-
-    for label in labels:
-        if label == 0:
-            weights.append(class_1)
-        elif label == 1:
-            weights.append(class_2)
-        else:
-            raise ValueError("only supporting binary: 0, 1")
-    if verbose:
-        logging.info(weights)
-
-    if sample_size:
-        imbalanced_sampler = sampler.WeightedRandomSampler(weights, sample_size, replacement =True)
-    else:
-        imbalanced_sampler = sampler.WeightedRandomSampler(weights, len(labels) , replacement =True)
-    return imbalanced_sampler
-
-def compute_cross_entropy_weights(torch_dataset, verbose = False):
-    """
-    Compute the weights for cross entropy function.
-    In order to compensate the imbalanced sample in the loss function.
-
+    Generate a weighted cross entropy function based on the number
+    of positive cases and number of negative cases.
     For more detail see Rajpurkar (2017).
 
-    Args: Torch dataset
-    Return: A float tensor of class weights
+    Args:
+        dataset: a pytorch dataset
+        weights: can be either 'auto' or a list
+            'auto' means the negative cases will be given the positve weights
+            and vice versa to balance out the gap in quantity
+            list e.g., [0.4,0.3] gives user a handler to customize it.
+
+    Return: A customized loss function
     """
-    try:
-        labels = torch_dataset.labels
-    except AttributeError:
-        logging.info('This dataset is made up by two smaller dataset.')
-        labels = np.hstack([torch_dataset.datasets[0].labels, torch_dataset.datasets[1].labels])
+    if weights == 'auto':
+        try:
+            labels = dataset.labels
+        except AttributeError: #more than 1 dataset
+            labels = [d.labels for d in self.dataset.datasets]
 
-    positives = sum(labels)
-    negatives = len(labels) - positives
+        positives = sum(torch.tensor(labels).squeeze_())
+        negatives = len(labels) - positives
 
-    try:
-        #plus is negative cases or 0 (see Rajpurkar 2017)
-        w_plus = negatives/len(labels)
-        w_minus = positives/len(labels)
+        w_plus = negatives.float()/len(labels) #cannot use long type
+        w_minus = positives.float()/len(labels)
+        weights = [w_minus, w_plus]
 
-    except ValueError:
-        logging.error("only supporting binary: 0, 1")
-        return None
+    elif len(weights) == 2:
+        pass
 
-    if verbose:
-        logging.info('the length of training set is {}'.format(len(labels)))
-        logging.info('the ratio of positive cases is {:.4f}'.format(w_minus))
-        logging.info('the ratio of negative cases is {:.4f}'.format(w_plus))
+    else:
+        raise ValueError('weights must be either auto or a vector of length 2')
 
-    weights_tensor = [w_minus, w_plus]
-    return weights_tensor
+    logging.info(f'the ratio of positive cases is {weights[0]}')
+    logging.info(f'the ratio of negative cases is {weights[1]}')
 
-import numpy as np
-import torch
+    weights_tensor = torch.tensor(weights).to(device)
+    criterion = nn.CrossEntropyLoss(weight = weights_tensor)
+
+    return criterion
+
 
 def f1_calculator_for_confusion_matrix(cf_matrix):
 
@@ -135,7 +94,6 @@ def log_parser(log, keyword_1, keyword_2, smooth = 0, early_stop = 0):
     '''
     import matplotlib.pyplot as plt
     import seaborn as sns
-    import pandas as pd
     result = []
     log_file = open(log)
     for line in log_file:
