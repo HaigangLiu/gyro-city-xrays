@@ -29,16 +29,11 @@ class Sampler:
         try: #one dataset
             self.labels_ = dataset.labels
         except AttributeError: # data augmentation
-            self.labels_ = [d.labels for d in self.dataset.datasets]
+            self.labels_  = []
+            for dataset in self.dataset.datasets:
+                self.labels_.extend(dataset.labels)
 
-        if self.prob_dict is None:
-            positives = sum(torch.tensor(self.labels_).squeeze_())
-            negatives = len(self.labels_) - positives
-            w_plus = negatives.float()/len(self.labels_)
-            w_minus = positives.float()/len(self.labels_)
-            self.prob_dict = {1:w_plus, 0: w_minus}
-        else:
-            self.prob_dict = prob_dict
+        self.prob_dict = prob_dict
 
     def generate_sampler(self):
         #sanity check
@@ -47,6 +42,13 @@ class Sampler:
 
         if self.sampler_type in ['both', 'subset'] and self.sample_size is None:
                 raise ValueError('Must specify the sample size.')
+
+        if self.prob_dict is None:
+            positives = sum(torch.tensor(self.labels_).squeeze_())
+            negatives = len(self.labels_) - positives
+            w_plus = negatives.float()/len(self.labels_)
+            w_minus = positives.float()/len(self.labels_)
+            self.prob_dict = {1:w_plus, 0: w_minus}
 
         #dispatch calls
         if self.sampler_type == 'subset':
