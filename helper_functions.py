@@ -71,7 +71,7 @@ def f1_calculator_for_confusion_matrix(cf_matrix):
     logging.info('test')
     return 2*p*r/(p+ r)
 
-def log_parser(log, keyword_1, keyword_2, smooth = 0, early_stop = 0):
+def log_parser(log, keyword_1, keyword_2, out_dir, smooth = 0, early_stop = 0):
     '''
     To parse the result copied and pasted from console.
 
@@ -94,28 +94,29 @@ def log_parser(log, keyword_1, keyword_2, smooth = 0, early_stop = 0):
     import matplotlib.pyplot as plt
     import seaborn as sns
     result = []
-    log_file = open(log)
-    for line in log_file:
+    for line in open(log):
         if keyword_1 in line.split(' ') and keyword_2 in line.split(' '):
             try:
                 result.append(float(line.split(' ')[-1]))
             except ValueError:
                 pass
+
     if early_stop:
         result = result[:-early_stop]
     if smooth:
         result = pd.Series(result).rolling(smooth).mean()
         result.dropna(inplace = True)
 
-    assert len(result) != 0, 'the result is empty. Try a different keyword combination'
-    df1 = pd.DataFrame({"epoch":range(len(result)), "value" : result})
-    f, ax = plt.subplots(1, 1)
-    LABEL = keyword_1 + ' ' +  keyword_2
-    ax.plot(range(len(df1["epoch"])), df1["value"], 'go-',label=LABEL, alpha = 0.5)
-    ax.legend()
-    plt.show()
-
-    return result
+    if result:
+        df1 = pd.DataFrame({"epoch":range(len(result)), "value" : result})
+        LABEL = keyword_1 + ' ' +  keyword_2
+        fig = plt.figure(dpi=200)
+        plt.plot(range(len(df1["epoch"])), df1["value"], 'go-',label=LABEL, alpha = 0.5)
+        fig.savefig(os.path.join(out_dir, LABEL))
+        logging.info(f'the plot named {LABEL} has been saved to {out_dir}')
+        return result
+    else:
+        raise ValueError('this keyword combination does not exist. Try another.')
 
 def compute_multilabel_AUCs(ground_truth, pred_prob, N_CLASSES):
 
