@@ -3,10 +3,13 @@ import torch.nn as nn
 import torch.nn.init as init
 import logging
 
-class ModelCustomizer:
+class ModelGenerator:
 
-    def __init__(self, cnn_architecture_name):
+    def __init__(self, cnn_architecture_name, pretrain = True, freeze_all_layers_before_last = False):
+
+        self.freeze_all_layers_before_last = freeze_all_layers_before_last
         self.cnn_architecture_name = cnn_architecture_name
+
         self.available_models = {
 
         'resnet18': [torchvision.models.resnet18, 'fc'],
@@ -31,15 +34,19 @@ class ModelCustomizer:
         self.cnn, self.layer_to_swap = self.available_models[cnn_architecture_name]
 
         try:
-            self.cnn_architecture = self.cnn(pretrained = True)
+            self.cnn_architecture = self.cnn(pretrained = pretrain)
         except TypeError:
             logging.warning(f'{cnn_architecture_name} does not support pretrain a keyword argument.')
             self.cnn_architecture = self.cnn()
         except:
-            logging.warning('server problem encoutered. setting pretrained = False. This might affect the model performance.')
+            logging.warning('cannot download model. setting pretrained as False.')
             self.cnn_architecture = self.cnn(pretrained = False)
 
     def network_modifier(self, out_features = 2):
+
+        if self.freeze_all_layers_before_last:
+            for param in self.cnn_architecture.parameters():
+                    param.requires_grad = False
 
         if self.layer_to_swap == 'fc':
             in_features  = self.cnn_architecture._modules[self.layer_to_swap].in_features
@@ -64,24 +71,35 @@ class ModelCustomizer:
                     nn.Sigmoid()
                 )
 
-        return self.cnn_architecture
+        return self
 
-    def change_initialization(self):
-        for module in self.cnn_architecture.modules():
+    def change_initialization(self, skip=True):
+        if skip:
+            return self
+        else:
+            for module in self.cnn_architecture.modules():
 
-            if isinstance(module, nn.Conv2d):
-                init.xavier_uniform_(module.weight.data)
-            elif isinstance(module, nn.Linear):
-                init.xavier_uniform_(module.weight.data)
-                if module.bias is not None:
-                    init.constant_(module.bias, 0.0)
+                if isinstance(module, nn.Conv2d):
+                    init.xavier_uniform_(module.weight.data)
+                elif isinstance(module, nn.Linear):
+                    init.xavier_uniform_(module.weight.data)
+                    if module.bias is not None:
+                        init.constant_(module.bias, 0.0)
+            return self
 
+    def get_model(self):
         return self.cnn_architecture
 
 if __name__ == '__main__': #example
 
     logging.basicConfig(level = logging.INFO)
-    m1 = ModelCustomizer('vgg16_bn')
-    cnn = m1.network_modifier(14)
-    cnn = m1.change_initialization()
-    print(cnn)
+    # m1 = ModelCustomizer('vgg16_bn')
+    # cnn = m1.network_modifier(14)
+    # cnn = m1.change_initialization()
+
+    cnn2 = ModelGenerator('densenet121',
+                    pretrain = True,
+                    freeze_all_layers_before_last = True).\
+            network_modifier(14).\
+            change_initialization(False).\
+            get_model()
