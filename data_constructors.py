@@ -5,8 +5,6 @@ from PIL import Image
 import os
 import torch
 from torchvision import transforms
-
-from parameter_sheet import IMAGE_SIZE
 NORMALIZE = transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])
 
 class DataConstructor(Dataset):
@@ -22,7 +20,7 @@ class DataConstructor(Dataset):
             usually specified later; but we have a default setting to
             cut some slack.
         '''
-    def __init__(self, image_folder, ground_truth, transform=None):
+    def __init__(self, image_folder, ground_truth, transform=None, image_size = 224):
         image_names = []
         labels = []
 
@@ -37,7 +35,7 @@ class DataConstructor(Dataset):
             if ground_truth == -1:
                 labels = [[1]]*len(image_names) #binary; boost positive cases
 
-            elif ground_truth <=14 and ground_truth > 0: #multiclass
+            elif ground_truth <=14 and ground_truth >=0: #multiclass
                 empty_string = [0]*14
                 empty_string[ground_truth] = 1
                 labels = [empty_string]*len(image_names)
@@ -62,7 +60,7 @@ class DataConstructor(Dataset):
         if transform == None:
             self.transform = transforms.Compose([
                             transforms.Resize([256,256]),
-                            transforms.RandomResizedCrop(IMAGE_SIZE),
+                            transforms.RandomResizedCrop(image_size),
                             transforms.RandomHorizontalFlip(),
                             transforms.ToTensor(), NORMALIZE])
         else:
@@ -109,6 +107,12 @@ class SpecializedContructorForCAM(Dataset):
         return len(self.image_names)
 
 if __name__ == '__main__':
-    test_loader_mode1 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', ground_truth =3)
+    #use case 1
+    test_loader_mode1 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', ground_truth=3)
+
     print(len(test_loader_mode1))
     print(test_loader_mode1[1])
+
+    #use case 2
+    test_loader_mode2 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', ground_truth= 'binary_label/train.txt')
+    print(test_loader_mode2[1])
