@@ -49,7 +49,7 @@ def sampler_imbalanced(torch_dataset, ratio, sample_size = None, verbose = False
     if sample_size:
         imbalanced_sampler = sampler.WeightedRandomSampler(weights, sample_size, replacement =True)
     else:
-        imbalanced_sampler = sampler.WeightedRandomSampler( weights, len(labels) , replacement =True)
+        imbalanced_sampler = sampler.WeightedRandomSampler(weights, len(labels) , replacement =True)
     return imbalanced_sampler
 
 def compute_cross_entropy_weights(torch_dataset, verbose = False):

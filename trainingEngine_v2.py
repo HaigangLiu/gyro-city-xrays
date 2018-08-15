@@ -47,7 +47,7 @@ class ModelTrainingAndTesting:
         if criterion is None and self.number_of_classes > 2:
             self.criterion = nn.BCELoss()
 
-        elif criterion is None and self.number_of_classes ==2:
+        elif criterion is None and self.number_of_classes == 2:
             self.criterion = nn.CrossEntropyLoss()
         else:
             self.criterion = criterion
@@ -60,9 +60,11 @@ class ModelTrainingAndTesting:
         ground_truth = []
 
         for images, labels in train_dataloader:
-
             images = images.to(self.device)
-            labels = labels.to(self.device)
+            if self.number_of_classes == 2:
+                labels = labels.to(self.device).long().squeeze_()
+            else:
+                labels = labels.to(self.device)
 
             self.optimizer_ft.zero_grad()
 

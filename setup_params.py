@@ -32,13 +32,13 @@ SUBSET_ADDITIONAL_POSITIVES = 3000 #only use some of fake data
 
 AUGMENTED_FOLDER_NAME = 'output_consolidation_or_pneumonia/' if DATA_AUGMENTATION else None
 #------------- Sampling Schemes For DataLoader----------------
-SUBSET_SAMPLING = True
+SUBSET_SAMPLING = False
 SEQUENTIAL_SAMPLING = False
 IMBALANCED_SAMPLING = True
 
 if SUBSET_SAMPLING:
     SUBSET_SAMPLING_SIZE = 45000
-    REDUCED_EPOCHS = 25
+    REDUCED_EPOCHS = 50
 
 if IMBALANCED_SAMPLING:
     POSITIVE_CASE_RATIO = 0.15
@@ -79,5 +79,9 @@ if DATA_AUGMENTATION and os.path.exists(HOME_DIR + AUGMENTED_FOLDER_NAME):
 logging.basicConfig(level=logging.INFO,
         filename= MODEL_CACHE_DIR + model_log_name,
         format='%(asctime)-15s %(levelname)-8s %(message)s')
+
+
+
 logging.info('The cnn architecture is {}'.format(MODEL_NAME))
+
 # logging.info('We consider the following list as postive cases {}'.format(QUALIFIED_LABEL_LIST))

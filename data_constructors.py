@@ -4,32 +4,35 @@ from torch.utils.data import Dataset
 from PIL import Image
 import os
 import torch
+from torchvision import transforms
+
+from parameter_sheet import IMAGE_SIZE
+NORMALIZE = transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])
 
 class DataConstructor(Dataset):
     '''
     Args:
         data_dir (str): Directory of the images
-        ground_truth_file (str): Dir of ground truth, should be a txt file
+        ground_truth (str): Dir of ground truth, should be a txt file
         transform (optional): pytorch image transformation operations; usually
         specified later
         '''
-    def __init__(self, image_folder, ground_truth_file = None, transform=None):
+    def __init__(self, image_folder, ground_truth, transform=None):
         image_names = []
         labels = []
 
-        if ground_truth_file is None:
-            print('Ground_truth_file is not specified.')
-            print('All images in this folder are assumed to belong the positive group')
+        if type(ground_truth) == int:
+            print(f'populate all cases with label {ground_truth}')
 
             image_names = []
             for image_name in os.listdir(image_folder):
                 if image_name.endswith(('png', 'jpg', 'jpeg')):
                     image_names.append(os.path.join(image_folder, image_name))
 
-            labels = [1]*len(image_names)
+            labels = [[ground_truth]]*len(image_names)
 
         else:
-            with open(ground_truth_file, "r") as f:
+            with open(ground_truth, "r") as f:
                 for line in f:
                     items = line.split()
                     image_name= items[0]
@@ -41,7 +44,15 @@ class DataConstructor(Dataset):
 
         self.image_names = image_names
         self.labels = labels
-        self.transform = transform
+
+        if transform == None:
+            self.transform = transforms.Compose([
+                            transforms.Resize([256,256]),
+                            transforms.RandomResizedCrop(IMAGE_SIZE),
+                            transforms.RandomHorizontalFlip(),
+                            transforms.ToTensor(), NORMALIZE])
+        else:
+            self.transform = transforms
 
     def __getitem__(self, index):
 
@@ -85,17 +96,17 @@ class SpecializedContructorForCAM(Dataset):
 
 if __name__ == '__main__':
 
-    test_loader_mode1 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/')
+    test_loader_mode1 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', ground_truth =3)
     print(len(test_loader_mode1))
     print(test_loader_mode1[1])
 
-    test_loader_mode2 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', 'binary_label/test.txt')
-    print(len(test_loader_mode2))
-    print(test_loader_mode2[1])
+    # test_loader_mode2 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', 'binary_label/test.txt')
+    # print(len(test_loader_mode2))
+    # print(test_loader_mode2[1])
 
-    test_loader_mode3 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', 'split/test.txt')
-    print(len(test_loader_mode2))
-    print(test_loader_mode2[1])
+    # test_loader_mode3 = DataConstructor('/Users/haigangliu/ImageData/ChestXrayData/', 'split/test.txt')
+    # print(len(test_loader_mode2))
+    # print(test_loader_mode2[1])
 
 
 

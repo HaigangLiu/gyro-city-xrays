@@ -30,7 +30,8 @@ class Sampler:
         try: #one dataset
             self.labels_ = dataset.labels
         except AttributeError: # data augmentation
-            self.labels_ = np.hstack([d.labels for d in self.dataset.datasets])
+
+            self.labels_ = [d.labels for d in self.dataset.datasets]
 
     def generate_sampler(self):
         #sanity check

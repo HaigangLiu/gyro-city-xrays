@@ -14,19 +14,18 @@ from torch.utils.data.sampler import SequentialSampler,SubsetRandomSampler
 
 import torch.nn.init as init
 import pickle
-from data_utilities import DataConstructor, CustomizedDataConstructor
+from data_utilities import DataConstructor
 from ImbalancedClassAugmentor import ImbalancedClassAugmentor
 from helper_functions import sampler_imbalanced, compute_cross_entropy_weights
-
 from customized_models_v2 import ModelCustomizer
 from trainingEngine_v2 import ModelTrainingAndTesting
 from SamplingSchemes import DataSplitter
 
-#torch.manual_seed(RANDOM_SEED)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
 
 splitter = DataSplitter(info_dir, QUALIFIED_LABEL_LIST, age_threshold = SET_AGE_THRESHOLD)
+
 if MANIUPULATE_TEST:
     train_df, validation_df, test_df = splitter.random_split_with_fixed_positives(POSITIVE_CASES_NUM, NEGATIVE_CASES_NUM, TRAIN_RATIO)
 else:
@@ -55,7 +54,7 @@ if DATA_AUGMENTATION:
     if not os.path.exists(augmented_data_dir):
         aug = ImbalancedClassAugmentor(HOME_DIR = HOME_DIR, DATA_DIR = DATA_DIR, output_folder_name = AUGMENTED_FOLDER_NAME, training_df = train_df, sample_size = SUBSET_ADDITIONAL_POSITIVES)
 
-    additional_positive_dataset = CustomizedDataConstructor(augmented_data_dir, transform = transforms.Compose([
+    additional_positive_dataset = DataConstructor(augmented_data_dir, transform = transforms.Compose([
              transforms.Resize([256,256]),
              transforms.RandomResizedCrop(IMAGE_SIZE),
              transforms.RandomHorizontalFlip(),

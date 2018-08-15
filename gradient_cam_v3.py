@@ -27,7 +27,7 @@ class CamGenerator():
         name_of_the_last_conv_layer (str): The name of the layer to visualize
     """
 
-    class_dict = { 'Atelectasis': 0, 'Cardiomegaly': 1, 'Effusion':2 , 'Infiltrate':3, 'Mass':4, 'Nodule':5, 'Pneumonia':6,'Pneumothorax':7, 'Consolidation':8, 'Edema':9, 'Emphysema':10, 'Fibrosis':11, 'Pleural_Thickening':12, 'Hernia:2':13}
+    class_dict = { 'Atelectasis': 0, 'Cardiomegaly': 1, 'Effusion':2 ,'Infiltrate':3, 'Mass':4, 'Nodule':5, 'Pneumonia':6,'Pneumothorax':7, 'Consolidation':8, 'Edema':9, 'Emphysema':10, 'Fibrosis':11, 'Pleural_Thickening':12, 'Hernia:2':13}
 
     def __init__(self, model, name_of_the_last_conv_layer, specialized_dataloader):
 
@@ -135,6 +135,7 @@ class CamGenerator():
         ax2.imshow((gradient_CAM/255))
 
         fig.savefig('/Users/haigangliu/Desktop/test/' +  f'{self.text_label[0]}' + f'{self.image_name_}')
+        plt.close()
 
     def batch_testing_engine(self):
         feature_maps_history = []

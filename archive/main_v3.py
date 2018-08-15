@@ -6,37 +6,56 @@ import time
 import logging
 import torch, torchvision
 
-from samplers import Sampler
+from samplers import generate_sampler
 import torch.nn as nn
 import torch.nn.init as init
 import torchvision.models as models
 from torch.utils.data import DataLoader
 
-from data_augmentor import DataAugmentor
-from data_contructors import DataConstructor
+
+from ImbalancedClassAugmentor import DataAugmentor
+
+from data_utilities import DataConstructor
 from helper_functions import sampler_imbalanced, compute_cross_entropy_weights
 from customized_models_v2 import ModelCustomizer
 from trainingEngine_v2 import ModelTrainingAndTesting
-from label_generator import label_generator
+from label_generator import  label_generator
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
+
 
 train_file, val_file, test_file = label_generator(INFO_DIR, 'Image Index','Finding Labels')
 train_dataset = DataConstructor(DATA_DIR, ground_truth=train_file)
 val_dataset = DataConstructor(DATA_DIR, ground_truth=val_file)
 test_dataset = DataConstructor(DATA_DIR, ground_truth=test_file)
 
-DATA_AUGMENTATION = True
+DATA_AUGMENTATION = False
 if DATA_AUGMENTATION:
     train_dataset = DataAugmentor(train_file, which_class=0, sample_size=50).concat_original_dataset(train_dataset)
 else:
     logging.info('Original dataset has been used. No data augmentation')
 
-#decide weights automatically
-sampler_train = Sampler(train_dataset, 'subset', sample_size=75000).generate_sampler()
-sampler_val = Sampler(test_dataset, 'other', sample_size=None).generate_sampler()
-sampler_test = Sampler(val_dataset, 'other', sample_size=None).generate_sampler()
+# if SUBSET_SAMPLING and IMBALANCED_SAMPLING:
+#     sampler_train = generate_sampler(train_dataset, 'both', sample_size = 100, prob_dict = {0:0.9, 1:0.1})
+# elif SUBSET_SAMPLING and not IMBALANCED_SAMPLING:
+#     sampler_train = generate_sampler(train_dataset, 'subset', sample_size = 100)
+# elif not SUBSET_SAMPLING and IMBALANCED_SAMPLING:
+#     sampler_train = generate_sampler(train_dataset, 'imbalance', prob_dict = {0:0.9, 1:0.1})
+# else:
+#     sampler_train = generate_sampler(train_dataset, 'other')
+
+# if SUBSET_SAMPLING:
+#     sampler_val = generate_sampler(val_dataset, 'subset', sample_size = 100)
+#     sampler_test = generate_sampler(test_dataset, 'subset', sample_size = 100)
+# else:
+#     sampler_val = generate_sampler(val_dataset,  'other')
+#     sampler_test = generate_sampler(test_dataset, 'other')
+
+sampler_train = generate_sampler(train_dataset, 'subset', sample_size = 75000)
+sampler_val = generate_sampler(val_dataset,  'other')
+sampler_test = generate_sampler(test_dataset, 'other')
 
 train_dataloader = DataLoader(dataset = train_dataset,
                               batch_size = BATCH_SIZE,
@@ -62,8 +81,18 @@ test_dataloader = DataLoader(dataset = test_dataset,
                             num_workers = NUM_WORKERS,
                             drop_last = True)
 
-model_customizer = ModelCustomizer(MODEL_NAME)
-model_ft = model_customizer.network_modifier(NUM_CLASS).to(device)
+# if SUBSET_SAMPLING:
+#     indices_val = np.random.choice(len(val_dataset), min(round(SUBSET_SAMPLING_SIZE*0.3), len(val_dataset)), replace = False)
+#     sampler_val = SubsetRandomSampler(indices_val)
+
+#     indices_test = np.random.choice(len(test_dataset), min(round(SUBSET_SAMPLING_SIZE*0.2), len(test_dataset)), replace = False)
+#     sampler_test = SubsetRandomSampler(indices_test)
+
+# else:
+#     sampler_val = SequentialSampler(val_dataset)
+#     sampler_test = SequentialSampler(test_dataset)
+
+
 
 
 # ALTERNATIVE_INITIALIZATION = False
@@ -71,6 +100,8 @@ model_ft = model_customizer.network_modifier(NUM_CLASS).to(device)
 #     model_ft = model_customizer.change_initialization()
 #     logging.info('This architecture has adopted an alternative initialization scheme: Xavier Normal.')
 
+model_customizer = ModelCustomizer(MODEL_NAME)
+model_ft = model_customizer.network_modifier(NUM_CLASS).to(device)
 # loaded_model = torchvision.models.densenet121(pretrained = True)
 
 # for param in loaded_model.parameters():
