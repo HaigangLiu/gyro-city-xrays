@@ -26,7 +26,9 @@ def customize_cross_entropy_function(dataset, weights):
         try:
             labels = dataset.labels
         except AttributeError: #more than 1 dataset
-            labels = [d.labels for d in self.dataset.datasets]
+            labels  = []
+            for dataset_ in dataset.datasets:
+                labels.extend(dataset_.labels)
 
         positives = sum(torch.tensor(labels).squeeze_())
         negatives = len(labels) - positives
