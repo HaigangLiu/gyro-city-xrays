@@ -7,7 +7,7 @@ import torch.nn as nn
 from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def customize_cross_entropy_function(dataset, weights, verbose = False):
+def customize_cross_entropy_function(dataset, weights):
     """
     Generate a weighted cross entropy function based on the number
     of positive cases and number of negative cases.
@@ -58,7 +58,8 @@ def f1_calculator_for_confusion_matrix(cf_matrix):
 
     Returns (float): f1 score
 
-    Note: Use sklearn.metrics.f1_score if the input data comes with 0s and 1s. This function only works with confusion matrix.
+    Note: Use sklearn.metrics.f1_score if the input data comes with 0s and 1s.
+    This function only works with confusion matrix.
     """
 
     a = cf_matrix[1,1]
@@ -78,13 +79,11 @@ def log_parser(log, keyword_1, keyword_2, smooth = 0, early_stop = 0):
         log (string): The log file of tranining
 
         keyword_1(string): Choose from training or validation and etc.
-
         keyword_2(string): Choose from f1, auc, acc and etc. Certain combination does not exist.
-
         Note: Certain combination of keyword 1 and keyword 2 does not exist.
 
-        smooth(int): Instead of calculating and plotting the raw data, a moving average will be calculated based on given smooth window. Default value is 0.
-
+        smooth(int): Instead of calculating and plotting the raw data,
+             a moving average will be calculated based on given smooth window. Default value is 0.
         early_stop(int): Truncate the list based on given terms. Default value is 0.
 
     Output:
