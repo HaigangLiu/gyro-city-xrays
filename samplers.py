@@ -1,7 +1,7 @@
 import numpy as np
 from torch.utils.data.sampler import SequentialSampler, SubsetRandomSampler, WeightedRandomSampler
 import logging
-
+import torch
 class Sampler:
     '''
     generate sampler based on give sampler types:
@@ -30,16 +30,22 @@ class Sampler:
         try: #one dataset
             self.labels_ = dataset.labels
         except AttributeError: # data augmentation
-
             self.labels_ = [d.labels for d in self.dataset.datasets]
+
+        if self.prob_dict is None:
+
+            positives = sum(torch.tensor(self.labels_).squeeze_())
+            negatives = len(self.labels_) - positives
+            w_plus = negatives.float()/len(self.labels_)
+            w_minus = positives.float()/len(self.labels_)
+
+            self.prob_dict = {1:w_plus, 0: w_minus}
+
 
     def generate_sampler(self):
         #sanity check
         if self.sampler_type in ['both', 'imbalance'] and not self.binary:
             raise TypeError(f'scheme: {self.sampler_type} not work for multiclass')
-
-        if self.sampler_type in ['both', 'imbalance'] and self.prob_dict is None:
-            raise ValueError('Must specify the weights.')
 
         if self.sampler_type in ['both', 'subset'] and self.sample_size is None:
                 raise ValueError('Must specify the sample size.')
@@ -60,12 +66,13 @@ class Sampler:
 
     def _subset_sampler(self):
         indices = np.random.choice(len(self.dataset), self.sample_size, replace=False)
+        return SubsetRandomSampler(indices)
 
     def _default_sampler(self):
         return SequentialSampler(self.dataset)
 
     def _both_sampler(self):
-        weights = [prob_dict[label[0]] for label in self.labels_]
+        weights = [self.prob_dict[label[0]] for label in self.labels_]
         return WeightedRandomSampler(weights,
                                     num_samples=self.sample_size,
                                     replacement=True)
