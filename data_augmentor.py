@@ -4,21 +4,17 @@ import Augmentor #data augmentation pipeline
 import random
 import secrets #Generate a random name for temp folder
 from parameter_sheet import LOG_DIR, DATA_DIR
-from data_utilities import DataConstructor
+from data_constructors import DataConstructor
 import torch
-
-
 class DataAugmentor:
     '''
     Implement data augmentation for the minority group to alleviate the problem of imbalaced sampling.
-
         Args:
         HOME_DIR(string): home directory (the parant directory of data directory).
         DATA_DIR(string): directory where images are placed.
         output_folder_name(string): Name of the folder. A folder of the given name will be created under HOME_DIR.
         training_df (pandas dataframe): Dataframe of image names of the minority group, with a column called 'Image Index'.
         sample_size(int): number of new images to be generated.
-
         Returns:
         None.
     Note: A folder with new images will be created.
@@ -90,4 +86,3 @@ class DataAugmentor:
 
 if __name__ == '__main__':
     sample_usage = DataAugmentor('/Users/haigangliu/training_log/test.txt', which_class=0, sample_size=5000)
-

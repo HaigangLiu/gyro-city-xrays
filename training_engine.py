@@ -2,9 +2,8 @@ import time, logging, torch
 import numpy as np
 import torch.nn as nn
 from torch.optim import lr_scheduler
-import setup_params
 from helper_functions import compute_multilabel_AUCs,stats_calculator_binary
-from customized_models_v2 import ModelCustomizer
+from customized_models import ModelGenerator
 
 class ModelTrainingAndTesting:
     def __init__(self, model_identifier, model_cache_dir,  number_of_classes, learning_rate = 0.001,  model_ft = None, criterion = None, optimizer = 'Adam'):

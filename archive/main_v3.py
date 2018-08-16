@@ -17,8 +17,8 @@ from ImbalancedClassAugmentor import DataAugmentor
 
 from data_utilities import DataConstructor
 from helper_functions import sampler_imbalanced, compute_cross_entropy_weights
-from customized_models_v2 import ModelCustomizer
-from trainingEngine_v2 import ModelTrainingAndTesting
+from customized_models import ModelCustomizer
+from training_engine import ModelTrainingAndTesting
 from label_generator import  label_generator
 
 

@@ -11,7 +11,7 @@ LOG_FOLDER_NAME is the name of the folder to be created to store log files
 
 DATA_DIR = "/Users/haigangliu/ImageData/ChestXrayData/"
 INFO_DIR = '/Users/haigangliu/ImageData/Data_Entry_2017.csv'
-TRAINING_SESSION_IDENTIFIER = 'multiclass_vgg11_new'
+TRAINING_SESSION_IDENTIFIER = 'brave_new_world'
 LOG_FOLDER_NAME = 'training_log'
 HOME = str(Path.home())
 
@@ -38,13 +38,15 @@ cases to show up in the test set
     NEGATIVE_CASES_NUM should be speficied if
     MANIUPULATE_TEST is true
 '''
-TRAIN_RATIO = 0.7
-VALIDATION_RATIO = 0.1
-TEST_RATIO = 0.2
+TRAIN_RATIO = 0.1
+VALIDATION_RATIO = 0.3
+TEST_RATIO = 0.6
 IMAGE_SIZE = 224
 
 SUBSET_SAMPLING = True
-REDUCED_SAMPLE_SIZE = 10000 if SUBSET_SAMPLING else None
+SAMPLE_SIZE = 10000 if SUBSET_SAMPLING else None
+DATA_AUGMENTATION = True
+
 
 MANIUPULATE_TEST = True
 POSITIVE_CASES_NUM = 50 if MANIUPULATE_TEST else None
@@ -62,7 +64,7 @@ BATCH_SIZE specifies how many images will be sent to gpu in on batch
 PRETRAIN dictates whether or not CNN pretrained on ImageNet will be used
 ALTERNATIVE_INITIALIZATION dictates whether or not non-default
     initialization scheme will be used '''
-MODEL_NAME = 'densenet161'
+MODEL_NAME = 'densenet121'
 BATCH_SIZE = 8
 NUM_WORKERS = 2
 LEARNING_RATE = 0.001
@@ -70,17 +72,14 @@ PRETRAIN = True
 OPTIMIZER = 'Adam'
 NUMBER_OF_EPOCHS = 50
 ALTERNATIVE_INITIALIZATION = False
+TRANSFER_FROM_IMAGE_NET = False
 
 # -------------------------- Binary or Multi ----------------------------
 '''
 GROUND_TRUTH_DIR needs an absolute path to the ground truth file
 '''
-BINARY = True
-
-if BINARY:
-    NUM_CLASS  = 2
-else:
-    NUM_CLASS = 14
+BINARY = False
+NUM_CLASS  = 2 if BINARY else 14
 
 if BINARY:
     '''
@@ -95,9 +94,16 @@ if BINARY:
     POSITIVE_CASE_RATIO will define to what extent minority group is boosted
     '''
     QUALIFIED_LABEL_LIST = ['Pneumonia','Consolidation', 'Effusion']
-    GROUND_TRUTH_DIR = os.path.join(os.getcwd(),'binary_label/Data_Entry_2017.csv')
     IMBALANCED_SAMPLING = True
     POSITIVE_CASE_RATIO = 0.15 if IMBALANCED_SAMPLING else None
+
+    MANUAL_WEIGHTS_TENSOR = False
+    if MANUAL_WEIGHTS_TENSOR:
+        POSITIVE_CLASS_WEIGHT = 0.87
+        NEGATIVE_CASES_WEIGHT = 0.13
+    WEIGHTS_TENSOR = [POSITIVE_CLASS_WEIGHT, NEGATIVE_CASES_WEIGHT] if MANUAL_WEIGHTS_TENSOR else 'auto'
+
+    AUGMENT_CLASS = -1
 
 else:
     '''
@@ -105,9 +111,9 @@ else:
     Li et al (2017) also published a splitted file
     set USE_DEFAULT_SPLIT = True to use this split.
     '''
-    IMBALANCED_SAMPLING = None
-    GROUND_TRUTH_DIR = os.path.join(os.getcwd(), 'multi_label/image_list.txt')
-    USE_DEFAULT_SPLIT = True
+    AUGMENT_CLASS = 1 # from 0 to 14
+    IMBALANCED_SAMPLING = None #dont change this one
+    # USE_DEFAULT_SPLIT = True
 
 # -------------------------- Determine the sampler type
 # --------------------------------------
@@ -122,11 +128,11 @@ else:
 Make sure do not overwrite previous files
 and train, test and val ratio add up to 1.
 '''
-file_log = os.path.join(LOG_DIR, TRAINING_SESSION_IDENTIFIER + '.log')
-# assert not os.path.exists(file_log),'TRAINING_SESSION_IDENTIFIER alreay exists.'
+LOG_FILE = os.path.join(LOG_DIR, TRAINING_SESSION_IDENTIFIER + '.log')
+# assert not os.path.exists(LOG_FILE),'TRAINING_SESSION_IDENTIFIER alreay exists.'
 add_to_one = TRAIN_RATIO + TEST_RATIO + VALIDATION_RATIO
 assert  add_to_one >= 0.99, 'the ratios are supposed to add up to 1'
-
+assert PRETRAIN + ALTERNATIVE_INITIALIZATION < 2, 'cannot use pretrained weights if initialization is specified'
 # -------------------------- Initialize the logger --------------------------------------
 '''
 A global session of logging will be started and a log file
@@ -134,7 +140,7 @@ will be created in the pre-determined location.
 '''
 import logging
 logging.basicConfig(level=logging.INFO,
-                    filename= file_log,
+                    filename= LOG_FILE,
                     format='%(asctime)-15s %(levelname)-8s %(message)s')
 
 logging.info(f'the trained model will be cached in {MODEL_CACHE_DIR}')
