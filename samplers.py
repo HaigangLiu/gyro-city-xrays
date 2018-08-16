@@ -43,7 +43,7 @@ class Sampler:
         if self.sampler_type in ['both', 'subset'] and self.sample_size is None:
                 raise ValueError('Must specify the sample size.')
 
-        if self.prob_dict is None:
+        if self.prob_dict is None and self.sampler_type in ['both', 'imbalance']:
             positives = sum(torch.tensor(self.labels_).squeeze_())
             negatives = len(self.labels_) - positives
             w_plus = negatives.float()/len(self.labels_)
