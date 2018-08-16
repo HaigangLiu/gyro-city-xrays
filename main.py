@@ -33,8 +33,8 @@ else:
 
 sampler_train = Sampler(train_dataset, SAMPLER_TYPE, sample_size=SAMPLE_SIZE).generate_sampler()
 sampler_val = Sampler(val_dataset, 'other', sample_size=None).generate_sampler()
-sampler_test = Sampler(test_dataset, 'other',
- sample_size=None).generate_sampler()
+sampler_test = Sampler(test_dataset, 'other', sample_size=None).generate_sampler
+()
 
 train_dataloader = DataLoader(dataset = train_dataset,
                               batch_size = BATCH_SIZE,
