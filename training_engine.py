@@ -97,7 +97,10 @@ class ModelTrainingAndTesting:
         for images, labels in validation_dataloader:
 
             images = images.to(self.device)
-            labels = labels.to(self.device)
+            if self.number_of_classes == 2:
+                labels = labels.to(self.device).long().squeeze_()
+            else:
+                labels = labels.to(self.device)
             self.optimizer_ft.zero_grad()
 
             with torch.set_grad_enabled(mode = False):
