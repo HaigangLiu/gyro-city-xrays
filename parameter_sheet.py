@@ -11,7 +11,7 @@ LOG_FOLDER_NAME is the name of the folder to be created to store log files
 
 DATA_DIR = "/Users/haigangliu/ImageData/ChestXrayData/"
 INFO_DIR = '/Users/haigangliu/ImageData/Data_Entry_2017.csv'
-TRAINING_SESSION_IDENTIFIER = 'brave_new_world'
+TRAINING_SESSION_IDENTIFIER = 'include_infiltration'
 LOG_FOLDER_NAME = 'training_log'
 HOME = str(Path.home())
 
@@ -38,14 +38,14 @@ cases to show up in the test set
     NEGATIVE_CASES_NUM should be speficied if
     MANIUPULATE_TEST is true
 '''
-TRAIN_RATIO = 0.1
-VALIDATION_RATIO = 0.3
-TEST_RATIO = 0.6
+TRAIN_RATIO = 0.01
+VALIDATION_RATIO = 0.01
+TEST_RATIO = 0.98
 IMAGE_SIZE = 224
 
 SUBSET_SAMPLING = True
-SAMPLE_SIZE = 10000 if SUBSET_SAMPLING else None
-DATA_AUGMENTATION = True
+SAMPLE_SIZE = 20 if SUBSET_SAMPLING else None
+DATA_AUGMENTATION = False
 
 
 MANIUPULATE_TEST = True
@@ -93,8 +93,8 @@ if BINARY:
     IMBALANCED_SAMPLING will sample more from the minority group if true
     POSITIVE_CASE_RATIO will define to what extent minority group is boosted
     '''
-    QUALIFIED_LABEL_LIST = ['Pneumonia','Consolidation', 'Effusion']
-    IMBALANCED_SAMPLING = True
+    QUALIFIED_LABEL_LIST = ['Pneumonia','Consolidation', 'Effusion', 'Infiltration']
+    IMBALANCED_SAMPLING = False
     POSITIVE_CASE_RATIO = 0.15 if IMBALANCED_SAMPLING else None
 
     MANUAL_WEIGHTS_TENSOR = False
