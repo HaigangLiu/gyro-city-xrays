@@ -38,6 +38,7 @@ cases to show up in the test set
     NEGATIVE_CASES_NUM should be speficied if
     MANIUPULATE_TEST is true
 '''
+
 TRAIN_RATIO = 0.1
 VALIDATION_RATIO = 0.3
 TEST_RATIO = 0.6
@@ -63,7 +64,9 @@ MODEL_NAME specifies the model choice for training. User can choose from
 BATCH_SIZE specifies how many images will be sent to gpu in on batch
 PRETRAIN dictates whether or not CNN pretrained on ImageNet will be used
 ALTERNATIVE_INITIALIZATION dictates whether or not non-default
-    initialization scheme will be used '''
+    initialization scheme will be used 
+'''
+
 MODEL_NAME = 'densenet121'
 BATCH_SIZE = 8
 NUM_WORKERS = 2
@@ -82,6 +85,7 @@ BINARY = False
 NUM_CLASS  = 2 if BINARY else 14
 
 if BINARY:
+    
     '''
     QUALIFIED_LABEL_LIST specifies what cases should be defined as positive
     the comprehensive label list is:
@@ -93,6 +97,7 @@ if BINARY:
     IMBALANCED_SAMPLING will sample more from the minority group if true
     POSITIVE_CASE_RATIO will define to what extent minority group is boosted
     '''
+    
     QUALIFIED_LABEL_LIST = ['Pneumonia','Consolidation', 'Effusion']
     IMBALANCED_SAMPLING = True
     POSITIVE_CASE_RATIO = 0.15 if IMBALANCED_SAMPLING else None
@@ -106,11 +111,13 @@ if BINARY:
     AUGMENT_CLASS = -1
 
 else:
+    
     '''
     Multi-label special option:
     Li et al (2017) also published a splitted file
     set USE_DEFAULT_SPLIT = True to use this split.
     '''
+    
     AUGMENT_CLASS = 1 # from 0 to 14
     IMBALANCED_SAMPLING = None #dont change this one
     # USE_DEFAULT_SPLIT = True
@@ -133,6 +140,7 @@ LOG_FILE = os.path.join(LOG_DIR, TRAINING_SESSION_IDENTIFIER + '.log')
 add_to_one = TRAIN_RATIO + TEST_RATIO + VALIDATION_RATIO
 assert  add_to_one >= 0.99, 'the ratios are supposed to add up to 1'
 assert PRETRAIN + ALTERNATIVE_INITIALIZATION < 2, 'cannot use pretrained weights if initialization is specified'
+
 # -------------------------- Initialize the logger --------------------------------------
 '''
 A global session of logging will be started and a log file
@@ -145,7 +153,8 @@ logging.basicConfig(level=logging.INFO,
 
 logging.info(f'the trained model will be cached in {MODEL_CACHE_DIR}')
 logging.info(f'The cnn architecture is {MODEL_NAME}.')
-# logging.info(f'We consider {QUALIFIED_LABEL_LIST} as positive cases')
+if QUALIFIED_LABEL_LIST:
+    logging.info(f'We consider {QUALIFIED_LABEL_LIST} as positive cases')
 logging.info(f'training session will last for {NUMBER_OF_EPOCHS} epochs')
 logging.info(f'the train, validate, test ratio is {TRAIN_RATIO}, {VALIDATION_RATIO}, {TEST_RATIO}')
 
@@ -155,6 +164,6 @@ else:
     logging.info('default initialization used')
 
 if PRETRAIN:
-    logging.info('pretrained model used  from ImageNet')
+    logging.info('pretrained model used from ImageNet')
 else:
     logging.info('no pretrained model used')
