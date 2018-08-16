@@ -125,8 +125,7 @@ else:
     IMBALANCED_SAMPLING = None #dont change this one
     # USE_DEFAULT_SPLIT = True
 
-# -------------------------- Determine the sampler type
-# --------------------------------------
+# -------------------------- Determine the sampler type --------------------------------------
 if IMBALANCED_SAMPLING is None and SUBSET_SAMPLING:
     SAMPLER_TYPE = 'subset'
 elif IMBALANCED_SAMPLING and SUBSET_SAMPLING:
