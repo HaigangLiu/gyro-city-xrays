@@ -26,14 +26,15 @@ if DATA_AUGMENTATION:
                                  # data_folder=DATA_DIR,
                                  # new_data_folder=LOG_DIR, #anywhere is ok
                                  which_class= AUGMENT_CLASS,
-                                 sample_size=50,
+                                 sample_size=5000,
                                  ).concat_original_dataset(train_dataset)
 else:
     logging.info('Original dataset has been used. No data augmentation')
 
 sampler_train = Sampler(train_dataset, SAMPLER_TYPE, sample_size=SAMPLE_SIZE).generate_sampler()
-sampler_val = Sampler(test_dataset, 'other', sample_size=None).generate_sampler()
-sampler_test = Sampler(val_dataset, 'other', sample_size=None).generate_sampler()
+sampler_val = Sampler(val_dataset, 'other', sample_size=None).generate_sampler()
+sampler_test = Sampler(test_dataset, 'other',
+ sample_size=None).generate_sampler()
 
 train_dataloader = DataLoader(dataset = train_dataset,
                               batch_size = BATCH_SIZE,
